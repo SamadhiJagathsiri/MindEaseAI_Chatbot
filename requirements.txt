@@ -1,26 +1,23 @@
-# Core Dependencies
+
 streamlit>=1.28.0
 python-dotenv>=1.0.0
 
-# LangChain Stack
 langchain>=0.1.0
 langchain-cohere>=0.1.0
 langchain-community>=0.0.20
 
-# Vector Store & Embeddings
+
 chromadb>=0.4.18
 faiss-cpu>=1.7.4
 
-# Document Processing
 pypdf>=3.17.0
 pdfplumber>=0.10.3
 
-# NLP & Sentiment
+
 textblob>=0.17.1
 vaderSentiment>=3.3.2
 
-# Cohere API
 cohere>=4.37
 
-# Additional Utilities
+
 tiktoken>=0.5.1
