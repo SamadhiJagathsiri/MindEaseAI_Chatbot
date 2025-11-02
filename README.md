@@ -161,9 +161,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📧 Contact
 
-**Your Name** - [your.email@example.com](mailto:your.email@example.com)
+**Samadhi Jagathsiri** - [anusarasamm@gmail.com](mailto:your.email@example.com)
 
-Project Link: [[https://github.com/SamadhiJagathsiri/CalmeraAI_Chatbot](https://github.com/yourusername/CalmeraAI_Chatbot)
+Project Link: [https://github.com/SamadhiJagathsiri/CalmeraAI_Chatbot](https://github.com/yourusername/CalmeraAI_Chatbot)
 
 ---
 
