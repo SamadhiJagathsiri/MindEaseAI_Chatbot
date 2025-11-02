@@ -1,5 +1,5 @@
 """
-Utility modules for MindEase AI
+Utility modules for MindEase AI.
 
 Components:
 - Config: Central configuration and API keys
@@ -11,8 +11,4 @@ from utils.config import Config
 from utils.document_loader import WellnessDocumentLoader
 from utils.vectorstore_manager import VectorStoreManager
 
-__all__ = [
-    'Config',
-    'WellnessDocumentLoader',
-    'VectorStoreManager',
-]
+__all__ = ["Config", "WellnessDocumentLoader", "VectorStoreManager"]
