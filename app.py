@@ -10,7 +10,7 @@ if os.path.exists(guides_path):
     files = os.listdir(guides_path)
     st.write("Files found:", files)
 else:
-    st.write("Folder not found!"))
+    st.write("Folder not found!")
 
 
 st.set_page_config(
