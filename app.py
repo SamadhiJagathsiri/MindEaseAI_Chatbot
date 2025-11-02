@@ -15,7 +15,7 @@ vectorstore_manager.create_vectorstore()  # will load existing or build new
 # -----------------------------
 # Initialize MindEase AI with RAG
 # -----------------------------
-mindease = MindEaseAI(vectorstore_manager=vectorstore_manager)
+mindease = MindEaseAI()  # no arguments
 
 
 
