@@ -21,10 +21,10 @@ class MindEaseAI:
         """
         Config.validate()
         
-        # Initialize memory
+        
         self.memory = MindEaseMemory()
         
-        # Initialize vectorstore manager if not provided
+        
         if vectorstore_manager is None:
             try:
                 vectorstore_manager = VectorStoreManager()
@@ -36,18 +36,18 @@ class MindEaseAI:
         
         self.vectorstore_manager = vectorstore_manager
         
-        # Initialize chains
+        
         self.conversation_chain = ConversationChain(memory=self.memory)
         self.rag_chain = RAGChain(
             memory=self.memory,
             vectorstore_manager=self.vectorstore_manager
         )
         
-        # Initialize crisis detection and sentiment analysis
+        
         self.crisis_detector = CrisisDetector()
         self.sentiment_analyzer = SentimentAnalyzer()
         
-        # Check RAG availability
+        #
         self.rag_enabled = self.rag_chain.is_available()
         
         print("✓ MindEase AI initialized successfully")
@@ -62,7 +62,7 @@ class MindEaseAI:
         Returns: {response, sentiment, crisis_detected, used_rag}
         """
         
-        # Check for crisis first
+        
         crisis_detected, crisis_response = self.crisis_detector.check_crisis(user_input)
         
         if crisis_detected:
@@ -73,13 +73,13 @@ class MindEaseAI:
                 "used_rag": False
             }
         
-        # Analyze sentiment
+        
         sentiment = self.sentiment_analyzer.analyze(user_input)
         
-        # Determine if RAG should be used
+        
         use_rag = self._should_use_rag(user_input, sentiment)
         
-        # Generate response
+        
         if use_rag and self.rag_enabled:
             response = self.rag_chain.generate_response(user_input)
             
@@ -89,7 +89,7 @@ class MindEaseAI:
         else:
             response = self.conversation_chain.generate_response(user_input)
         
-        # Store interaction
+        
         self.memory.add_interaction(user_input, response, sentiment)
         
         return {
@@ -104,7 +104,7 @@ class MindEaseAI:
         if not self.rag_enabled:
             return False
         
-        # Keywords that suggest user wants information/guidance
+        
         rag_triggers = [
             "how to", "what is", "help with", "strategies for",
             "tips", "advice", "techniques", "exercises",
@@ -113,7 +113,7 @@ class MindEaseAI:
         
         user_lower = user_input.lower()
         
-        # Check for wellness topics and triggers
+        
         wellness_match = any(topic in user_lower for topic in Config.WELLNESS_TOPICS)
         trigger_match = any(trigger in user_lower for trigger in rag_triggers)
         
