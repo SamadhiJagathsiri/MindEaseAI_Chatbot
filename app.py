@@ -124,6 +124,9 @@ with st.sidebar:
         
         Remember: This is not a replacement for professional mental health care.
         """)
+      
+        
+        
         st.divider()
     st.markdown("""
     <div style='text-align: center; color: #888; font-size: 0.75rem;'>
