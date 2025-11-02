@@ -35,25 +35,25 @@ class RAGChain:
     def _initialize_chain(self):
         """Initialize the RAG chain with retriever"""
         
-        # Check if vectorstore manager exists
+        
         if not self.vectorstore_manager:
             print("⚠️ No vector store manager provided. RAG disabled.")
             return
         
-        # Check if vectorstore exists
+        
         if not hasattr(self.vectorstore_manager, 'vectorstore') or self.vectorstore_manager.vectorstore is None:
             print("⚠️ No vectorstore found in manager. RAG disabled.")
             return
         
         try:
-            # Get retriever with search parameters
+            
             self.retriever = self.vectorstore_manager.get_retriever(k=3)
             
             if not self.retriever:
                 print("⚠️ Failed to create retriever. RAG disabled.")
                 return
             
-            # Test the retriever with a simple query
+            
             try:
                 test_results = self.retriever.get_relevant_documents("wellness")
                 print(f"✓ Retriever test successful: Found {len(test_results)} documents")
@@ -62,22 +62,22 @@ class RAGChain:
                 self.retriever = None
                 return
             
-            # Create the document combination chain
+            
             doc_chain = create_stuff_documents_chain(
                 llm=self.llm, 
                 prompt=RAG_PROMPT
             )
             
-            # Create the full retrieval chain
+            
             self.chain = create_retrieval_chain(
                 retriever=self.retriever,
                 combine_docs_chain=doc_chain
             )
             
-            print("✓ RAG chain initialized successfully")
+            print(" RAG chain initialized successfully")
             
         except Exception as e:
-            print(f"❌ Error initializing RAG chain: {e}")
+            print(f" Error initializing RAG chain: {e}")
             import traceback
             traceback.print_exc()
             self.chain = None
@@ -112,24 +112,24 @@ class RAGChain:
             print("⚠️ RAG not available, returning None")
             return None
         
-        # Get chat history for context
+        
         chat_history = self.memory.get_chat_history()
         
         try:
             print(f"🔍 Retrieving documents for: {user_input[:50]}...")
             
-            # Invoke the RAG chain
+            
             result = self.chain.invoke({
                 "input": user_input,
                 "chat_history": chat_history
             })
             
-            # Extract the answer
+            
             answer = result.get("answer", "").strip()
             
-            # Log the number of documents used
+            
             context_docs = result.get("context", [])
-            print(f"✓ RAG response generated using {len(context_docs)} documents")
+            print(f"RAG response generated using {len(context_docs)} documents")
             
             if not answer:
                 print("⚠️ RAG returned empty answer")
@@ -138,7 +138,7 @@ class RAGChain:
             return answer
             
         except Exception as e:
-            print(f"❌ Error in RAG generation: {e}")
+            print(f" Error in RAG generation: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -163,7 +163,7 @@ class RAGChain:
             print(f"✓ Found {len(results)} documents for query: {query[:50]}...")
             return results
         except Exception as e:
-            print(f"❌ Error searching guides: {e}")
+            print(f" Error searching guides: {e}")
             return []
     
     def get_relevant_context(self, query: str, k: int = 3) -> str:
