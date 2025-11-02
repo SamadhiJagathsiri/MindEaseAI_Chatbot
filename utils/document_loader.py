@@ -7,11 +7,9 @@ import os
 class WellnessDocumentLoader:
     """Load and process wellness guide PDFs"""
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  
-ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..")) 
-GUIDES_PATH = os.path.join(ROOT_DIR, "data", "guides")
-
-
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))  
+    ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..")) 
+    GUIDES_PATH = os.path.join(ROOT_DIR, "data", "guides")
 
     def __init__(self, guides_path: str = None, chunk_size: int = 1000, chunk_overlap: int = 200):
         self.guides_path = guides_path or self.GUIDES_PATH
