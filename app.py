@@ -7,7 +7,8 @@ from utils.vectorstore_manager import VectorStoreManager
 # Initialize vector store manager and MindEase AI
 # -----------------------------
 vectorstore_manager = VectorStoreManager()
-vectorstore_manager.create_vectorstore()  # load or create vectorstore
+vectorstore_manager.get_retriever()  # This will create/load vectorstore internally
+
 
 # Pass vectorstore_manager to MindEaseAI
 mindease = MindEaseAI(vectorstore_manager=vectorstore_manager)
