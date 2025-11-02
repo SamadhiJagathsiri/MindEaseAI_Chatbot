@@ -1,18 +1,6 @@
 import streamlit as st
-import os
 from chatbot.mindease_ai import MindEaseAI
-from utils.document_loader import WellnessDocumentLoader  # import the loader
-import time
-
-# -----------------------------
-# Set up and check PDF guides
-# -----------------------------
-
-# Initialize the loader (it will use the correct path automatically)
-loader = WellnessDocumentLoader()
-chunks = loader.process_documents()  # load and split PDFs
-
-
+from utils.config import Config
 
 # -----------------------------
 # Page configuration
@@ -57,32 +45,30 @@ with st.sidebar:
     st.markdown("*Your compassionate wellness companion*")
     st.divider()
 
-    # Show RAG status based on chunks loaded
-    if chunks:
+    if st.session_state.mindease.rag_enabled:
         st.success("📚 Wellness Guides: Loaded")
     else:
         st.warning("📚 Wellness Guides: Not available")
         st.caption("Add PDF guides to `data/guides/` to enable")
 
     st.divider()
-    
     st.markdown("### ⚙️ Settings")
     st.session_state.show_sentiment = st.checkbox(
         "Show emotional analysis",
         value=st.session_state.show_sentiment
     )
-    
+
     if st.session_state.messages:
         emotional_state = st.session_state.mindease.get_emotional_summary()
         st.info(f"💭 Recent mood: {emotional_state}")
-    
+
     st.divider()
-    
+
     if st.button("🔄 New Conversation", use_container_width=True):
         st.session_state.mindease.clear_conversation()
         st.session_state.messages = []
         st.rerun()
-    
+
     if st.button("📖 About MindEase", use_container_width=True):
         st.info("""
         MindEase uses LangChain and Cohere to provide:
@@ -90,7 +76,7 @@ with st.sidebar:
         - Crisis detection
         - Evidence-based wellness guidance
         - Emotional awareness
-        
+
         Remember: This is not a replacement for professional mental health care.
         """)
 
@@ -106,35 +92,25 @@ st.markdown('<p class="subtitle">A safe space for your thoughts and feelings</p>
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        
         if st.session_state.show_sentiment and "sentiment" in message:
             sentiment = message["sentiment"]
             polarity = sentiment.get("polarity", 0)
-            
             if polarity > 0.1:
-                badge_class = "positive"
-                emoji = "😊"
+                badge_class, emoji = "positive", "😊"
             elif polarity < -0.1:
-                badge_class = "negative"
-                emoji = "😔"
+                badge_class, emoji = "negative", "😔"
             else:
-                badge_class = "neutral"
-                emoji = "😐"
-            
-            st.markdown(
-                f'<span class="sentiment-badge {badge_class}">{emoji} {sentiment.get("label", "neutral")}</span>',
-                unsafe_allow_html=True
-            )
+                badge_class, emoji = "neutral", "😐"
+            st.markdown(f'<span class="sentiment-badge {badge_class}">{emoji} {sentiment.get("label","neutral")}</span>', unsafe_allow_html=True)
 
 # -----------------------------
 # Chat input
 # -----------------------------
 if prompt := st.chat_input("Share what's on your mind..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-    
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    
+
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             result = st.session_state.mindease.process_message(prompt)
@@ -142,33 +118,22 @@ if prompt := st.chat_input("Share what's on your mind..."):
             sentiment = result["sentiment"]
             crisis = result["crisis_detected"]
             used_rag = result["used_rag"]
-            
             st.markdown(response)
-            
+
             if crisis:
                 st.markdown('<div class="crisis-warning">⚠️ Crisis resources provided</div>', unsafe_allow_html=True)
-            
             if used_rag:
                 st.caption("📚 Response enhanced with wellness guides")
-            
             if st.session_state.show_sentiment:
                 polarity = sentiment.get("polarity", 0)
-                
                 if polarity > 0.1:
-                    badge_class = "positive"
-                    emoji = "😊"
+                    badge_class, emoji = "positive", "😊"
                 elif polarity < -0.1:
-                    badge_class = "negative"
-                    emoji = "😔"
+                    badge_class, emoji = "negative", "😔"
                 else:
-                    badge_class = "neutral"
-                    emoji = "😐"
-                
-                st.markdown(
-                    f'<span class="sentiment-badge {badge_class}">{emoji} {sentiment.get("label", "neutral")}</span>',
-                    unsafe_allow_html=True
-                )
-    
+                    badge_class, emoji = "neutral", "😐"
+                st.markdown(f'<span class="sentiment-badge {badge_class}">{emoji} {sentiment.get("label","neutral")}</span>', unsafe_allow_html=True)
+
     st.session_state.messages.append({
         "role": "assistant",
         "content": response,
