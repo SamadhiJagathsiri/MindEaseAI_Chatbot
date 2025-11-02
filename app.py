@@ -3,20 +3,18 @@ from chatbot.mindease_ai import MindEaseAI
 from utils.config import Config
 from utils.vectorstore_manager import VectorStoreManager
 
-
-# Initialize vector store manager
+# -----------------------------
+# Initialize vector store manager and MindEase AI
+# -----------------------------
 vectorstore_manager = VectorStoreManager()
+vectorstore_manager.create_vectorstore()  # load or create vectorstore
 
-# Load the vector store
-vectorstore_manager.load_vectorstore()
-
-# Pass it to MindEaseAI if your constructor supports it
+# Pass vectorstore_manager to MindEaseAI
 mindease = MindEaseAI(vectorstore_manager=vectorstore_manager)
 
-print(hasattr(vectorstore_manager, "load_vectorstore"))  # Should print True
-print(callable(vectorstore_manager.load_vectorstore))    # Should print True
-
-
+# -----------------------------
+# Streamlit page config
+# -----------------------------
 st.set_page_config(
     page_title="MindEase AI - Your Wellness Companion",
     page_icon="🌱",
@@ -41,7 +39,7 @@ st.markdown("""
 # -----------------------------
 def init_session_state():
     if "mindease" not in st.session_state:
-        st.session_state.mindease = MindEaseAI()
+        st.session_state.mindease = mindease  # use the instance with vectorstore
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "show_sentiment" not in st.session_state:
