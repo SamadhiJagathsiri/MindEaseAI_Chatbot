@@ -1,68 +1,63 @@
-from langchain_cohere import CohereEmbeddings
+from langchain_cohere import ChatCohere
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from chatbot.prompts.templates import RAG_PROMPT
+from chatbot.memory.conversation_memory import MindEaseMemory
 from utils.config import Config
-from utils.document_loader import WellnessDocumentLoader
-from langchain.vectorstores import Chroma
+from utils.vectorstore_manager import VectorStoreManager
 
-
-import os
-
-class VectorStoreManager:
-    """Manage vector store for wellness guides"""
+class RAGChain:
+    """Retrieval-Augmented Generation chain for wellness guides"""
     
-    def __init__(self):
-        self.embeddings = CohereEmbeddings(
+    def __init__(self, memory: MindEaseMemory = None):
+        self.llm = ChatCohere(
             cohere_api_key=Config.COHERE_API_KEY,
-            model=Config.EMBEDDING_MODEL
+            model=Config.COHERE_MODEL,
+            temperature=Config.TEMPERATURE,
+            max_tokens=Config.MAX_TOKENS
         )
-        self.persist_directory = Config.VECTOR_STORE_PATH
-        self.vectorstore = None
-    
-    def create_vectorstore(self, force_reload: bool = False):
-        """Create or load existing vector store"""
+        self.memory = memory or MindEaseMemory()
+        self.vectorstore_manager = VectorStoreManager()
+        self.vectorstore = self.vectorstore_manager.create_vectorstore()
+        self.retriever = self.vectorstore_manager.get_retriever()
+        self.chain = None
+        self._initialize_chain()
+
+    def _initialize_chain(self):
+        if not self.retriever:
+            print("⚠️ No vector store available. RAG chain disabled.")
+            return
         
-        
-        if os.path.exists(self.persist_directory) and not force_reload:
-            print("📚 Loading existing vector store...")
-            self.vectorstore = Chroma(
-                persist_directory=self.persist_directory,
-                embedding_function=self.embeddings
-            )
-            return self.vectorstore
-        
-        # Create new vectorstore
-        print("🔨 Creating new vector store from documents...")
-        loader = WellnessDocumentLoader()
-        chunks = loader.process_documents()
-        
-        if not chunks:
-            print("⚠️ No documents found. Vector store will be empty.")
-            print("   Add PDF guides to data/guides/ directory")
+        doc_chain = create_stuff_documents_chain(
+            llm=self.llm,
+            prompt=RAG_PROMPT
+        )
+        self.chain = create_retrieval_chain(
+            retriever=self.retriever,
+            combine_docs_chain=doc_chain
+        )
+        print("✓ RAG chain initialized successfully")
+
+    def is_available(self) -> bool:
+        return self.chain is not None
+
+    def generate_response(self, user_input: str) -> str:
+        if not self.is_available():
             return None
         
-        self.vectorstore = Chroma.from_documents(
-            documents=chunks,
-            embedding=self.embeddings,
-            persist_directory=self.persist_directory
-        )
-        
-        print(f"✓ Vector store created with {len(chunks)} chunks")
-        return self.vectorstore
-    
-    def get_retriever(self, k: int = 3):
-        """Get retriever for RAG chain"""
-        if not self.vectorstore:
-            self.create_vectorstore()
-        
-        if not self.vectorstore:
+        try:
+            chat_history = self.memory.get_chat_history()
+            result = self.chain.invoke({
+                "input": user_input,
+                "chat_history": chat_history
+            })
+            return result["answer"].strip()
+        except Exception as e:
+            print(f"Error in RAG generation: {e}")
             return None
-            
-        return self.vectorstore.as_retriever(
-            search_kwargs={"k": k}
-        )
-    
-    def similarity_search(self, query: str, k: int = 3):
-        """Direct similarity search"""
-        if not self.vectorstore:
+
+    def search_guides(self, query: str, k: int = 3):
+        if not self.retriever:
             return []
-        
-        return self.vectorstore.similarity_search(query, k=k)
+        return self.vectorstore_manager.similarity_search(query, k=k)
+
