@@ -1,4 +1,3 @@
-# utils/vectorstore_manager.py
 import os
 from pathlib import Path
 from langchain_community.document_loaders import PyPDFLoader
@@ -26,27 +25,27 @@ class VectorStoreManager:
         print(f"📁 Guides directory: {self.guides_dir.absolute()}")
         print(f"📁 Persist directory: {self.persist_dir.absolute()}")
         
-        # Initialize embeddings
+       
         try:
             self.embeddings = CohereEmbeddings(
                 cohere_api_key=Config.COHERE_API_KEY,
                 model="embed-english-v3.0"
             )
-            print("✓ Cohere embeddings initialized")
+            print(" Cohere embeddings initialized")
         except Exception as e:
-            print(f"❌ Failed to initialize embeddings: {e}")
+            print(f" Failed to initialize embeddings: {e}")
             raise
     
     def _get_pdf_files(self):
         """Get all PDF files from guides directory"""
         
-        # Ensure directory exists
+        
         if not self.guides_dir.exists():
             print(f"⚠️ Creating guides directory: {self.guides_dir}")
             self.guides_dir.mkdir(parents=True, exist_ok=True)
             return []
         
-        # Find all PDF files
+        
         pdf_files = list(self.guides_dir.glob("*.pdf"))
         
         print(f"📄 Found {len(pdf_files)} PDF files in {self.guides_dir}")
@@ -66,15 +65,14 @@ class VectorStoreManager:
         
         for pdf_path in pdf_files:
             try:
-                print(f"📖 Loading: {pdf_path.name}")
+                print(f" Loading: {pdf_path.name}")
                 
-                # Load PDF
+                
                 loader = PyPDFLoader(str(pdf_path))
                 documents = loader.load()
                 
-                print(f"  ✓ Loaded {len(documents)} pages from {pdf_path.name}")
-                
-                # Add metadata
+                print(f"  Loaded {len(documents)} pages from {pdf_path.name}")
+               
                 for doc in documents:
                     doc.metadata['source'] = pdf_path.name
                 
@@ -90,7 +88,7 @@ class VectorStoreManager:
         
         print(f"✓ Total documents loaded: {len(all_documents)}")
         
-        # Split documents into chunks
+        
         try:
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=1000,
@@ -105,7 +103,7 @@ class VectorStoreManager:
             return splits
             
         except Exception as e:
-            print(f"❌ Error splitting documents: {e}")
+            print(f" Error splitting documents: {e}")
             return []
     
     def create_vectorstore(self, force_rebuild: bool = False):
@@ -116,7 +114,7 @@ class VectorStoreManager:
             force_rebuild: Force rebuild even if persisted store exists
         """
         
-        # Check if persisted vectorstore exists and we're not forcing rebuild
+        
         if not force_rebuild and self.persist_dir.exists() and list(self.persist_dir.glob("*")):
             try:
                 print(f"📦 Loading existing vectorstore from {self.persist_dir}")
@@ -126,11 +124,11 @@ class VectorStoreManager:
                     embedding_function=self.embeddings
                 )
                 
-                # Test the vectorstore
+               
                 try:
                     collection = self.vectorstore._collection
                     count = collection.count()
-                    print(f"✓ Loaded vectorstore with {count} documents")
+                    print(f" Loaded vectorstore with {count} documents")
                     
                     if count > 0:
                         return self.vectorstore
@@ -156,18 +154,18 @@ class VectorStoreManager:
             print(f"   Add PDF files to: {self.guides_dir.absolute()}")
             return None
         
-        # Load and split documents
+        
         documents = self._load_documents(pdf_files)
         
         if not documents:
-            print("❌ Failed to load documents. RAG will be disabled.")
+            print(" Failed to load documents. RAG will be disabled.")
             return None
         
         try:
-            # Create vectorstore
-            print(f"🔨 Creating vectorstore with {len(documents)} chunks...")
             
-            # Ensure persist directory exists
+            print(f" Creating vectorstore with {len(documents)} chunks...")
+            
+            
             self.persist_dir.mkdir(parents=True, exist_ok=True)
             
             self.vectorstore = Chroma.from_documents(
@@ -176,15 +174,15 @@ class VectorStoreManager:
                 persist_directory=str(self.persist_dir)
             )
             
-            # Verify creation
+            
             collection = self.vectorstore._collection
             count = collection.count()
-            print(f"✓ Vectorstore created successfully with {count} documents")
+            print(f" Vectorstore created successfully with {count} documents")
             
             return self.vectorstore
             
         except Exception as e:
-            print(f"❌ Error creating vectorstore: {e}")
+            print(f" Error creating vectorstore: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -210,11 +208,11 @@ class VectorStoreManager:
                 search_kwargs={"k": k}
             )
             
-            print(f"✓ Retriever created (k={k}, type={search_type})")
+            print(f"Retriever created (k={k}, type={search_type})")
             return retriever
             
         except Exception as e:
-            print(f"❌ Error creating retriever: {e}")
+            print(f"Error creating retriever: {e}")
             return None
     
     def similarity_search(self, query: str, k: int = 3):
@@ -237,7 +235,7 @@ class VectorStoreManager:
             print(f"✓ Found {len(results)} results for: {query[:50]}...")
             return results
         except Exception as e:
-            print(f"❌ Error in similarity search: {e}")
+            print(f" Error in similarity search: {e}")
             return []
     
     def add_documents(self, documents):
@@ -251,7 +249,7 @@ class VectorStoreManager:
             print(f"✓ Added {len(documents)} documents to vectorstore")
             return True
         except Exception as e:
-            print(f"❌ Error adding documents: {e}")
+            print(f" Error adding documents: {e}")
             return False
     
     def delete_vectorstore(self):
@@ -261,11 +259,11 @@ class VectorStoreManager:
         if self.persist_dir.exists():
             try:
                 shutil.rmtree(self.persist_dir)
-                print(f"✓ Deleted vectorstore at {self.persist_dir}")
+                print(f" Deleted vectorstore at {self.persist_dir}")
                 self.vectorstore = None
                 return True
             except Exception as e:
-                print(f"❌ Error deleting vectorstore: {e}")
+                print(f" Error deleting vectorstore: {e}")
                 return False
         else:
             print("⚠️ No vectorstore to delete")
