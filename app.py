@@ -5,7 +5,7 @@ from utils.vectorstore_manager import VectorStoreManager
 import utils.vectorstore_manager as vsm
 
 st.set_page_config(
-    page_title="MindEase AI - Your Wellness Companion",
+    page_title="PeacePal AI - friendly companion for peace of mind",
     page_icon="🌱",
     layout="centered",
     initial_sidebar_state="expanded"
@@ -52,7 +52,7 @@ def init_session_state():
         st.session_state.initialized = False
     
     if not st.session_state.initialized:
-        with st.spinner("🌱 Initializing MindEase AI..."):
+        with st.spinner("🌱 Initializing PeacePal AI..."):
             try:
                 
                 
@@ -78,7 +78,7 @@ init_session_state()
 
 
 with st.sidebar:
-    st.markdown("### 🌱 MindEase AI")
+    st.markdown("### 🌱 PeacePal")
     st.markdown("*Your compassionate wellness companion*")
     st.divider()
     
@@ -128,7 +128,7 @@ with st.sidebar:
     
 
 # Main content
-st.markdown('<h1 class="main-header">🌱 MindEase AI</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">🌱 PeacePal AI</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">A safe space for your thoughts and feelings</p>', unsafe_allow_html=True)
 
 # Display chat messages
@@ -217,4 +217,4 @@ if prompt := st.chat_input("Share what's on your mind..."):
 
 
 st.divider()
-st.caption("⚠️ MindEase is a supportive tool, not a substitute for professional mental health care. If you're in crisis, please contact emergency services or a crisis helpline.")
+st.caption("⚠️ PeacePal is a supportive tool, not a substitute for professional mental health care. If you're in crisis, please contact emergency services or a crisis helpline.")
