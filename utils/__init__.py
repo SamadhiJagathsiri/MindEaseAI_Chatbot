@@ -12,7 +12,8 @@ from utils.document_loader import WellnessDocumentLoader
 from utils.vectorstore_manager import VectorStoreManager
 
 __all__ = [
-    'Config',
-    'WellnessDocumentLoader',
-    'VectorStoreManager',
+    "Config",
+    "WellnessDocumentLoader",
+    "VectorStoreManager",
 ]
+
