@@ -4,6 +4,7 @@ from chatbot.memory.conversation_memory import MindEaseMemory
 from chatbot.crisis_detection import CrisisDetector
 from chatbot.sentiment_analysis import SentimentAnalyzer
 from utils.config import Config
+from utils.vectorstore_manager import VectorStoreManager
 
 class MindEaseAI:
     """
@@ -11,29 +12,49 @@ class MindEaseAI:
     Coordinates conversation, RAG, crisis detection, and sentiment analysis
     """
     
-    def __init__(self):
+    def __init__(self, vectorstore_manager: VectorStoreManager = None):
+        """
+        Initialize MindEase AI
         
+        Args:
+            vectorstore_manager: Optional VectorStoreManager instance
+        """
         Config.validate()
         
-        
+        # Initialize memory
         self.memory = MindEaseMemory()
         
+        # Initialize vectorstore manager if not provided
+        if vectorstore_manager is None:
+            try:
+                vectorstore_manager = VectorStoreManager()
+                vectorstore_manager.create_vectorstore()
+                print("✓ VectorStoreManager initialized internally")
+            except Exception as e:
+                print(f"⚠️ Failed to initialize VectorStoreManager: {e}")
+                vectorstore_manager = None
         
+        self.vectorstore_manager = vectorstore_manager
+        
+        # Initialize chains
         self.conversation_chain = ConversationChain(memory=self.memory)
-        self.rag_chain = RAGChain(memory=self.memory)
+        self.rag_chain = RAGChain(
+            memory=self.memory,
+            vectorstore_manager=self.vectorstore_manager
+        )
         
-        
+        # Initialize crisis detection and sentiment analysis
         self.crisis_detector = CrisisDetector()
         self.sentiment_analyzer = SentimentAnalyzer()
         
-        
+        # Check RAG availability
         self.rag_enabled = self.rag_chain.is_available()
         
-        print(" MindEase AI initialized successfully")
+        print("✓ MindEase AI initialized successfully")
         if self.rag_enabled:
-            print(" RAG mode: Enabled (wellness guides loaded)")
+            print("✓ RAG mode: Enabled (wellness guides loaded)")
         else:
-            print(" RAG mode: Disabled (add PDFs to data/guides/)")
+            print("⚠️ RAG mode: Disabled (add PDFs to data/guides/)")
     
     def process_message(self, user_input: str) -> dict:
         """
@@ -41,7 +62,7 @@ class MindEaseAI:
         Returns: {response, sentiment, crisis_detected, used_rag}
         """
         
-        
+        # Check for crisis first
         crisis_detected, crisis_response = self.crisis_detector.check_crisis(user_input)
         
         if crisis_detected:
@@ -52,13 +73,13 @@ class MindEaseAI:
                 "used_rag": False
             }
         
-        
+        # Analyze sentiment
         sentiment = self.sentiment_analyzer.analyze(user_input)
         
-        
+        # Determine if RAG should be used
         use_rag = self._should_use_rag(user_input, sentiment)
         
-        
+        # Generate response
         if use_rag and self.rag_enabled:
             response = self.rag_chain.generate_response(user_input)
             
@@ -68,7 +89,7 @@ class MindEaseAI:
         else:
             response = self.conversation_chain.generate_response(user_input)
         
-        
+        # Store interaction
         self.memory.add_interaction(user_input, response, sentiment)
         
         return {
@@ -83,7 +104,7 @@ class MindEaseAI:
         if not self.rag_enabled:
             return False
         
-        
+        # Keywords that suggest user wants information/guidance
         rag_triggers = [
             "how to", "what is", "help with", "strategies for",
             "tips", "advice", "techniques", "exercises",
@@ -92,7 +113,7 @@ class MindEaseAI:
         
         user_lower = user_input.lower()
         
-        
+        # Check for wellness topics and triggers
         wellness_match = any(topic in user_lower for topic in Config.WELLNESS_TOPICS)
         trigger_match = any(trigger in user_lower for trigger in rag_triggers)
         
@@ -109,7 +130,7 @@ class MindEaseAI:
     def clear_conversation(self):
         """Reset conversation state"""
         self.memory.clear()
-        print("Conversation history cleared")
+        print("✓ Conversation history cleared")
     
     def search_wellness_guides(self, query: str):
         """Search wellness guides directly"""
