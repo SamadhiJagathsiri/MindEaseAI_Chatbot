@@ -1,3 +1,4 @@
+# chatbot/chains/rag_chain.py
 from langchain_cohere import ChatCohere
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -7,9 +8,9 @@ from utils.config import Config
 from utils.vectorstore_manager import VectorStoreManager
 
 class RAGChain:
-    """Retrieval-Augmented Generation chain for wellness guide integration"""
+    """Retrieval-Augmented Generation chain for PDFs"""
 
-    def __init__(self, memory: MindEaseMemory = None):
+    def __init__(self, memory: MindEaseMemory = None, vectorstore_manager: VectorStoreManager = None):
         self.llm = ChatCohere(
             cohere_api_key=Config.COHERE_API_KEY,
             model=Config.COHERE_MODEL,
@@ -17,58 +18,38 @@ class RAGChain:
             max_tokens=Config.MAX_TOKENS
         )
         self.memory = memory or MindEaseMemory()
-        self.vectorstore_manager = VectorStoreManager()
-        self.retriever = None
+        self.vectorstore_manager = vectorstore_manager
         self.chain = None
-
+        self.retriever = None
         self._initialize_chain()
 
     def _initialize_chain(self):
-        """Initialize RAG chain with retriever"""
-        try:
-            self.retriever = self.vectorstore_manager.get_retriever(k=3)
-            if not self.retriever:
-                print("⚠️ No vector store available. RAG chain disabled.")
-                return
-
-            # Create document chain
-            doc_chain = create_stuff_documents_chain(
-                llm=self.llm,
-                prompt=RAG_PROMPT
-            )
-
-            # Create retrieval chain
-            self.chain = create_retrieval_chain(
-                retriever=self.retriever,
-                combine_docs_chain=doc_chain
-            )
-
-            print("✓ RAG chain initialized successfully")
-
-        except Exception as e:
-            print(f"Error initializing RAG chain: {e}")
-            self.chain = None
+        if not self.vectorstore_manager:
+            print("⚠️ No vector store manager provided. RAG disabled.")
+            return
+        self.retriever = self.vectorstore_manager.get_retriever(k=3)
+        if not self.retriever:
+            print("⚠️ No retriever found. RAG disabled.")
+            return
+        doc_chain = create_stuff_documents_chain(llm=self.llm, prompt=RAG_PROMPT)
+        self.chain = create_retrieval_chain(retriever=self.retriever, combine_docs_chain=doc_chain)
+        print("✓ RAG chain initialized successfully")
 
     def is_available(self) -> bool:
         return self.chain is not None
 
     def generate_response(self, user_input: str) -> str:
-        """Generate response using wellness guides context"""
         if not self.is_available():
             return None
+        chat_history = self.memory.get_chat_history()
         try:
-            chat_history = self.memory.get_chat_history()
-            result = self.chain.invoke({
-                "input": user_input,
-                "chat_history": chat_history
-            })
+            result = self.chain.invoke({"input": user_input, "chat_history": chat_history})
             return result["answer"].strip()
         except Exception as e:
             print(f"Error in RAG generation: {e}")
             return None
 
     def search_guides(self, query: str, k: int = 3):
-        """Search wellness guides directly"""
         if not self.retriever:
             return []
         return self.vectorstore_manager.similarity_search(query, k=k)
