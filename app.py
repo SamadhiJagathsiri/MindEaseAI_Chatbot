@@ -5,7 +5,7 @@ from utils.vectorstore_manager import VectorStoreManager
 import utils.vectorstore_manager as vsm
 
 st.set_page_config(
-    page_title="PeacePal AI - friendly companion for peace of mind",
+    page_title="Calmera AI - friendly companion for peace of mind",
     page_icon="🌱",
     layout="centered",
     initial_sidebar_state="expanded"
@@ -52,7 +52,7 @@ def init_session_state():
         st.session_state.initialized = False
     
     if not st.session_state.initialized:
-        with st.spinner("🌱 Initializing PeacePal AI..."):
+        with st.spinner("🌱 Initializing Calmera AI..."):
             try:
                 
                 
@@ -78,7 +78,7 @@ init_session_state()
 
 
 with st.sidebar:
-    st.markdown("### 🌱 PeacePal")
+    st.markdown("### 🌱 Calmera")
     st.markdown("*Your compassionate wellness companion*")
     st.divider()
     
@@ -128,7 +128,7 @@ with st.sidebar:
     
 
 # Main content
-st.markdown('<h1 class="main-header">🌱 PeacePal AI</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">🌱 Calmera AI</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">A safe space for your thoughts and feelings</p>', unsafe_allow_html=True)
 
 # Display chat messages
