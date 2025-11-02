@@ -4,6 +4,7 @@ from chatbot.memory.conversation_memory import MindEaseMemory
 from chatbot.crisis_detection import CrisisDetector
 from chatbot.sentiment_analysis import SentimentAnalyzer
 from utils.config import Config
+from utils.vectorstore_manager import VectorStoreManager
 
 class MindEaseAI:
     """
@@ -11,21 +12,24 @@ class MindEaseAI:
     Coordinates conversation, RAG, crisis detection, and sentiment analysis
     """
     
-    def __init__(self):
-        
+    def __init__(self, vectorstore_manager: VectorStoreManager = None):
         Config.validate()
-        
         
         self.memory = MindEaseMemory()
         
-        
         self.conversation_chain = ConversationChain(memory=self.memory)
-        self.rag_chain = RAGChain(memory=self.memory)
         
+        # Use provided vectorstore_manager or create a new one
+        self.vectorstore_manager = vectorstore_manager or VectorStoreManager()
+        self.vectorstore_manager.create_vectorstore()  # ensure vectorstore exists
+        
+        self.rag_chain = RAGChain(
+            memory=self.memory,
+            vectorstore_manager=self.vectorstore_manager
+        )
         
         self.crisis_detector = CrisisDetector()
         self.sentiment_analyzer = SentimentAnalyzer()
-        
         
         self.rag_enabled = self.rag_chain.is_available()
         
@@ -40,8 +44,6 @@ class MindEaseAI:
         Process user message through the complete pipeline
         Returns: {response, sentiment, crisis_detected, used_rag}
         """
-        
-        
         crisis_detected, crisis_response = self.crisis_detector.check_crisis(user_input)
         
         if crisis_detected:
@@ -52,22 +54,16 @@ class MindEaseAI:
                 "used_rag": False
             }
         
-        
         sentiment = self.sentiment_analyzer.analyze(user_input)
-        
-        
         use_rag = self._should_use_rag(user_input, sentiment)
-        
         
         if use_rag and self.rag_enabled:
             response = self.rag_chain.generate_response(user_input)
-            
             if not response:
                 response = self.conversation_chain.generate_response(user_input)
                 use_rag = False
         else:
             response = self.conversation_chain.generate_response(user_input)
-        
         
         self.memory.add_interaction(user_input, response, sentiment)
         
@@ -83,7 +79,6 @@ class MindEaseAI:
         if not self.rag_enabled:
             return False
         
-        
         rag_triggers = [
             "how to", "what is", "help with", "strategies for",
             "tips", "advice", "techniques", "exercises",
@@ -91,8 +86,6 @@ class MindEaseAI:
         ]
         
         user_lower = user_input.lower()
-        
-        
         wellness_match = any(topic in user_lower for topic in Config.WELLNESS_TOPICS)
         trigger_match = any(trigger in user_lower for trigger in rag_triggers)
         
