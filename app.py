@@ -2,11 +2,15 @@ import streamlit as st
 from chatbot.mindease_ai import MindEaseAI
 from utils.document_loader import WellnessDocumentLoader
 
-
-loader = WellnessDocumentLoader()  
+# -----------------------------
+# Initialize Loader and AI
+# -----------------------------
+loader = WellnessDocumentLoader()  # handles path internally
 mindease = MindEaseAI(document_loader=loader)
 
-
+# -----------------------------
+# Streamlit page configuration
+# -----------------------------
 st.set_page_config(
     page_title="MindEase AI - Your Wellness Companion",
     page_icon="🌱",
@@ -26,7 +30,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
--
+# -----------------------------
+# Initialize session state
+# -----------------------------
 def init_session_state():
     if "mindease" not in st.session_state:
         st.session_state.mindease = mindease
@@ -37,13 +43,15 @@ def init_session_state():
 
 init_session_state()
 
-
+# -----------------------------
+# Sidebar
+# -----------------------------
 with st.sidebar:
     st.markdown("### 🌱 MindEase AI")
     st.markdown("*Your compassionate wellness companion*")
     st.divider()
 
-   
+    # Show RAG status
     if st.session_state.mindease.rag_enabled:
         st.success("📚 Wellness Guides: Loaded")
     else:
@@ -80,11 +88,15 @@ with st.sidebar:
         Remember: This is not a replacement for professional mental health care.
         """)
 
-
+# -----------------------------
+# Main page header
+# -----------------------------
 st.markdown('<h1 class="main-header">🌱 MindEase AI</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">A safe space for your thoughts and feelings</p>', unsafe_allow_html=True)
 
-
+# -----------------------------
+# Display chat messages
+# -----------------------------
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -108,7 +120,9 @@ for message in st.session_state.messages:
                 unsafe_allow_html=True
             )
 
-
+# -----------------------------
+# Chat input
+# -----------------------------
 if prompt := st.chat_input("Share what's on your mind..."):
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -158,4 +172,4 @@ if prompt := st.chat_input("Share what's on your mind..."):
     })
 
 st.divider()
-st.caption("""⚠️ MindEase is a supportive tool, not a substitute for professional mental health care. If you're in crisis, please contact emergency services or a crisis helpline.""")
+st.caption("⚠️ MindEase is a supportive tool, not a substitute for professional mental health care. If you're in crisis, please contact emergency services or a crisis helpline.")
