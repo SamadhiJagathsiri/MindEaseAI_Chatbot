@@ -4,21 +4,6 @@ import time
 from utils.vectorstore_manager import VectorStoreManager
 import utils.vectorstore_manager as vsm
 
-st.write("Using VectorStoreManager from:", vsm.__file__)
-
-# -----------------------------
-# Build or load vector store first
-# -----------------------------
-vectorstore_manager = VectorStoreManager()
-vectorstore_manager.create_vectorstore()  # will load existing or build new
-
-# -----------------------------
-# Initialize MindEase AI with RAG
-# -----------------------------
-mindease = MindEaseAI()  # no arguments
-
-
-
 st.set_page_config(
     page_title="MindEase AI - Your Wellness Companion",
     page_icon="🌱",
@@ -62,12 +47,39 @@ st.markdown("""
 
 # Initialize session state
 def init_session_state():
-    if "mindease" not in st.session_state:
-        st.session_state.mindease = MindEaseAI()
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "show_sentiment" not in st.session_state:
-        st.session_state.show_sentiment = False
+    """Initialize session state variables"""
+    if "initialized" not in st.session_state:
+        st.session_state.initialized = False
+    
+    if not st.session_state.initialized:
+        with st.spinner("🌱 Initializing MindEase AI..."):
+            try:
+                # Create and load vector store
+                st.write("📚 Loading vectorstore...")
+                st.write(f"Using VectorStoreManager from: {vsm.__file__}")
+                
+                vectorstore_manager = VectorStoreManager()
+                vectorstore_manager.create_vectorstore()
+                
+                st.write("✓ Vectorstore loaded")
+                
+                # Initialize MindEase AI with the vectorstore manager
+                st.write("🤖 Initializing MindEase AI...")
+                mindease = MindEaseAI(vectorstore_manager=vectorstore_manager)
+                
+                st.session_state.mindease = mindease
+                st.session_state.messages = []
+                st.session_state.show_sentiment = False
+                st.session_state.initialized = True
+                
+                st.write("✓ MindEase AI ready!")
+                time.sleep(1)
+                st.rerun()
+                
+            except Exception as e:
+                st.error(f"❌ Initialization failed: {str(e)}")
+                st.write("Full error:", e)
+                st.stop()
 
 init_session_state()
 
@@ -80,6 +92,9 @@ with st.sidebar:
     # RAG Status
     if st.session_state.mindease.rag_enabled:
         st.success("📚 Wellness Guides: Loaded")
+        # Show number of documents if available
+        if hasattr(st.session_state.mindease, 'vectorstore_manager'):
+            st.caption("RAG is active and ready")
     else:
         st.warning("📚 Wellness Guides: Not available")
         st.caption("Add PDF guides to `data/guides/` to enable")
@@ -116,6 +131,15 @@ with st.sidebar:
         
         Remember: This is not a replacement for professional mental health care.
         """)
+    
+    # Debug info (collapsible)
+    with st.expander("🔧 Debug Info"):
+        st.write(f"RAG Enabled: {st.session_state.mindease.rag_enabled}")
+        st.write(f"Messages: {len(st.session_state.messages)}")
+        if hasattr(st.session_state.mindease, 'vectorstore_manager'):
+            st.write("VectorStore: Available")
+        else:
+            st.write("VectorStore: Not available")
 
 # Main content
 st.markdown('<h1 class="main-header">🌱 MindEase AI</h1>', unsafe_allow_html=True)
@@ -157,49 +181,54 @@ if prompt := st.chat_input("Share what's on your mind..."):
     # Generate response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            result = st.session_state.mindease.process_message(prompt)
-            
-            response = result["response"]
-            sentiment = result["sentiment"]
-            crisis = result["crisis_detected"]
-            used_rag = result["used_rag"]
-            
-            st.markdown(response)
-            
-            # Show indicators
-            if crisis:
-                st.markdown('<div class="crisis-warning">⚠️ Crisis resources provided</div>', unsafe_allow_html=True)
-            
-            if used_rag:
-                st.caption("📚 Response enhanced with wellness guides")
-            
-            # Show sentiment
-            if st.session_state.show_sentiment:
-                polarity = sentiment.get("polarity", 0)
+            try:
+                result = st.session_state.mindease.process_message(prompt)
                 
-                if polarity > 0.1:
-                    badge_class = "positive"
-                    emoji = "😊"
-                elif polarity < -0.1:
-                    badge_class = "negative"
-                    emoji = "😔"
-                else:
-                    badge_class = "neutral"
-                    emoji = "😐"
+                response = result["response"]
+                sentiment = result["sentiment"]
+                crisis = result["crisis_detected"]
+                used_rag = result["used_rag"]
                 
-                st.markdown(
-                    f'<span class="sentiment-badge {badge_class}">{emoji} {sentiment.get("label", "neutral")}</span>',
-                    unsafe_allow_html=True
-                )
-    
-    # Save assistant message
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": response,
-        "sentiment": sentiment,
-        "crisis": crisis,
-        "used_rag": used_rag
-    })
+                st.markdown(response)
+                
+                # Show indicators
+                if crisis:
+                    st.markdown('<div class="crisis-warning">⚠️ Crisis resources provided</div>', unsafe_allow_html=True)
+                
+                if used_rag:
+                    st.caption("📚 Response enhanced with wellness guides")
+                
+                # Show sentiment
+                if st.session_state.show_sentiment:
+                    polarity = sentiment.get("polarity", 0)
+                    
+                    if polarity > 0.1:
+                        badge_class = "positive"
+                        emoji = "😊"
+                    elif polarity < -0.1:
+                        badge_class = "negative"
+                        emoji = "😔"
+                    else:
+                        badge_class = "neutral"
+                        emoji = "😐"
+                    
+                    st.markdown(
+                        f'<span class="sentiment-badge {badge_class}">{emoji} {sentiment.get("label", "neutral")}</span>',
+                        unsafe_allow_html=True
+                    )
+                
+                # Save assistant message
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": response,
+                    "sentiment": sentiment,
+                    "crisis": crisis,
+                    "used_rag": used_rag
+                })
+                
+            except Exception as e:
+                st.error(f"Error generating response: {str(e)}")
+                st.write("Please try again or start a new conversation.")
 
 # Footer
 st.divider()
