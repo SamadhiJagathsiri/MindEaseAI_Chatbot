@@ -1,20 +1,10 @@
 import streamlit as st
-import os
 from chatbot.mindease_ai import MindEaseAI
-from utils.document_loader import WellnessDocumentLoader  
-import time
-
-loader = WellnessDocumentLoader()
-chunks = loader.process_documents() 
-
-st.write("Looking in:", loader.guides_path)
-st.write(f"PDF chunks loaded: {len(chunks)}")
+from utils.document_loader import WellnessDocumentLoader
 
 
-for i, chunk in enumerate(chunks[:3]):
-    st.write(f"Chunk {i+1} preview:")
-    st.write(chunk.page_content[:300], "...")
-
+loader = WellnessDocumentLoader()  
+mindease = MindEaseAI(document_loader=loader)
 
 
 st.set_page_config(
@@ -36,10 +26,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
+-
 def init_session_state():
     if "mindease" not in st.session_state:
-        st.session_state.mindease = MindEaseAI()
+        st.session_state.mindease = mindease
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "show_sentiment" not in st.session_state:
@@ -54,7 +44,7 @@ with st.sidebar:
     st.divider()
 
    
-    if chunks:
+    if st.session_state.mindease.rag_enabled:
         st.success("📚 Wellness Guides: Loaded")
     else:
         st.warning("📚 Wellness Guides: Not available")
@@ -77,7 +67,7 @@ with st.sidebar:
     if st.button("🔄 New Conversation", use_container_width=True):
         st.session_state.mindease.clear_conversation()
         st.session_state.messages = []
-        st.rerun()
+        st.experimental_rerun()
     
     if st.button("📖 About MindEase", use_container_width=True):
         st.info("""
@@ -169,3 +159,4 @@ if prompt := st.chat_input("Share what's on your mind..."):
 
 st.divider()
 st.caption("⚠️ MindEase is a supportive tool, not a substitute for professional mental health care. If you're in crisis, please contact emergency services or a crisis helpline.")
+. If you're in crisis, please contact emergency services or a crisis helpline.")
