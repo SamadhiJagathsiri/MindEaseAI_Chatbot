@@ -217,4 +217,4 @@ if prompt := st.chat_input("Share what's on your mind..."):
 
 
 st.divider()
-st.caption("⚠️ PeacePal is a supportive tool, not a substitute for professional mental health care. If you're in crisis, please contact emergency services or a crisis helpline.")
+st.caption("⚠️ Calmera is a supportive tool, not a substitute for professional mental health care. If you're in crisis, please contact emergency services or a crisis helpline.")
