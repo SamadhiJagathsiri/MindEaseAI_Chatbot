@@ -114,7 +114,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
     
-    if st.button("📖 About MindEase", use_container_width=True):
+    if st.button("📖 About Calmera", use_container_width=True):
         st.info("""
         MindEase uses LangChain and Cohere to provide:
         - Empathetic conversation
