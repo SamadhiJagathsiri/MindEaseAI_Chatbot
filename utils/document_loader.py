@@ -6,7 +6,11 @@ import os
 class WellnessDocumentLoader:
     """Load and process wellness guide PDFs"""
     
-    def __init__(self, guides_path: str = "guides", chunk_size: int = 1000, chunk_overlap: int = 200):
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
+GUIDES_PATH = os.path.join(ROOT_DIR, "guides")
+
+def __init__(self, guides_path: str = GUIDES_PATH, chunk_size: int = 1000, chunk_overlap: int = 200):
         self.guides_path = guides_path
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
