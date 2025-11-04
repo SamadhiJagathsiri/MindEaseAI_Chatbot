@@ -81,18 +81,46 @@ with st.sidebar:
     st.markdown("### 🌱 Calmera")
     st.markdown("*Your compassionate wellness companion*")
     st.divider()
-    
-    
+
     if st.session_state.mindease.rag_enabled:
         st.success("📚 Wellness Guides: Loaded")
-        
+
         if hasattr(st.session_state.mindease, 'vectorstore_manager'):
-            st.caption("Wellness Guides available")
+            st.caption("Available Wellness Guides:")
+
+            import os
+            import streamlit as st
+
+            guide_folder = "data/guides"
+            if os.path.exists(guide_folder):
+                guide_files = [f for f in os.listdir(guide_folder) if f.endswith(".pdf")]
+                
+                if guide_files:
+                    for guide in guide_files:
+                        guide_name = os.path.splitext(guide)[0].replace("_", " ").title()
+                        guide_path = os.path.join(guide_folder, guide)
+
+                        # Create a clickable link
+                        with open(guide_path, "rb") as file:
+                            guide_bytes = file.read()
+
+                        st.download_button(
+                            label=f"🪷 {guide_name}",
+                            data=guide_bytes,
+                            file_name=guide,
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                else:
+                    st.caption("No guides found in the folder.")
+            else:
+                st.caption("Guide folder not found.")
     else:
         st.warning("📚 Wellness Guides: Not available")
         st.caption("Add PDF guides to `data/guides/` to enable")
-    
+
     st.divider()
+
     
    
     st.markdown("### ⚙️ Settings")
