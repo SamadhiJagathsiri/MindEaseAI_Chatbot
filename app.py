@@ -105,7 +105,7 @@ with st.sidebar:
                             guide_bytes = file.read()
 
                         st.download_button(
-                            label=f"🪷 {guide_name}",
+                            label=f"🌿 {guide_name}",
                             data=guide_bytes,
                             file_name=guide,
                             mime="application/pdf",
