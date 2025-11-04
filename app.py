@@ -144,7 +144,7 @@ with st.sidebar:
     
     if st.button("📖 About Calmera", use_container_width=True):
         st.info("""
-        MindEase uses LangChain and Cohere to provide:
+       Calmera uses LangChain and Cohere to provide:
         - Empathetic conversation
         - Crisis detection
         - Evidence-based wellness guidance
